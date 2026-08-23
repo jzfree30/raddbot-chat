@@ -100,13 +100,14 @@
                 const data = await res.json();
 
                 if (data.success && data.download_url) {
-                    statusText.innerText = "¡Enlace listo! Abriendo descarga...";
-                    // Abrir la descarga directa en una pestaña nueva o iniciar la descarga directa
-                    window.open(data.download_url, '_blank');
+                    statusText.innerText = "¡Enlace listo! Haz clic abajo para descargar:";
+                    
+                    // Mostrar un enlace directo y funcional para navegadores móviles
+                    appendMessage(`✅ Enlace listo: <a href="${data.download_url}" target="_blank" style="color: #38bdf8; font-weight: bold; text-decoration: underline;">👉 Toca aquí para descargar</a>`, 'bot');
                     
                     setTimeout(() => { statusBox.style.display = 'none'; }, 3000);
                 } else {
-                    statusText.innerText = "No se pudo extraer el enlace directo de este archivo.";
+                    statusText.innerText = "No se pudo extraer el enlace directo.";
                     setTimeout(() => { statusBox.style.display = 'none'; }, 4000);
                 }
             } catch (err) {
