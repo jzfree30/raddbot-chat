@@ -2,13 +2,24 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>RADDCRAFT - Buscador</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: system-ui, -apple-system, sans-serif; 
+        }
         
         body { 
-            background-color: #050b14; 
+            /* Fondo patrón estilo redstone/obsidiana en CSS puro que se adapta a cualquier pantalla */
+            background-color: #0b0f19;
+            background-image: 
+                radial-gradient(#1e293b 15%, transparent 16%),
+                radial-gradient(#1e293b 15%, transparent 16%);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
             color: #f8fafc; 
             display: flex; 
             justify-content: center;
@@ -17,6 +28,7 @@
             overflow: hidden;
         }
 
+        /* Contenedor tipo App móvil adaptado a PC y Celular */
         #app-wrapper {
             width: 100%;
             max-width: 480px;
@@ -24,23 +36,25 @@
             display: flex;
             flex-direction: column;
             position: relative;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
-            border-left: 1px solid rgba(255, 255, 255, 0.1);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: #0f172a;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.9);
+            border-left: 1px solid #1e293b;
+            border-right: 1px solid #1e293b;
         }
 
         header { 
-            background-color: rgba(15, 23, 42, 0.9); 
-            padding: 16px; 
+            background-color: #1e293b; 
+            padding: 14px; 
             text-align: center; 
             font-weight: bold; 
             color: #38bdf8; 
             border-bottom: 2px solid #2563eb; 
-            font-size: 1.2rem;
-            backdrop-filter: blur(8px);
-            z-index: 10;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            flex-shrink: 0;
         }
 
+        /* Área de mensajes scrolleable */
         #chat-container { 
             flex: 1; 
             overflow-y: auto; 
@@ -48,35 +62,32 @@
             display: flex; 
             flex-direction: column; 
             gap: 12px;
-            background-image: linear-gradient(rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.65)), url('https://i.ibb.co/DhpDhyZ/images.jpg'); 
-            background-size: cover; 
-            background-position: center bottom;
-            background-repeat: no-repeat;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.6) 0%, rgba(11, 15, 25, 0.8) 100%);
         }
 
         .message { 
             max-width: 88%; 
-            padding: 12px 16px; 
+            padding: 12px 14px; 
             border-radius: 12px; 
-            font-size: 0.95rem; 
+            font-size: 0.92rem; 
             line-height: 1.4; 
             word-break: break-word; 
-            backdrop-filter: blur(6px);
         }
         
         .user { 
             align-self: flex-end; 
-            background-color: rgba(37, 99, 235, 0.88); 
+            background-color: #2563eb; 
             color: white; 
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-bottom-right-radius: 2px;
         }
         
         .bot { 
             align-self: flex-start; 
-            background-color: rgba(30, 41, 59, 0.88); 
+            background-color: #1e293b; 
             color: #f8fafc; 
             width: 100%; 
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid #334155;
+            border-bottom-left-radius: 2px;
         }
 
         .option-btn { 
@@ -85,7 +96,7 @@
             text-align: left; 
             padding: 12px; 
             margin-top: 8px; 
-            background-color: rgba(15, 23, 42, 0.85); 
+            background-color: #0f172a; 
             border: 1px solid #38bdf8; 
             color: #38bdf8; 
             border-radius: 8px; 
@@ -95,27 +106,28 @@
         }
         
         .option-btn:hover { 
-            background-color: rgba(56, 189, 248, 0.2); 
+            background-color: rgba(56, 189, 248, 0.15); 
         }
 
         .status-card { 
             margin-top: 8px; 
             padding: 12px; 
-            background: rgba(15, 23, 42, 0.9); 
+            background: #0f172a; 
             border: 1px solid #38bdf8; 
             border-radius: 8px; 
             color: #38bdf8; 
-            font-size: 0.9rem; 
+            font-size: 0.88rem; 
             text-align: center; 
         }
 
+        /* Barra de entrada de texto fija en la parte inferior */
         #input-container { 
             display: flex; 
-            padding: 12px; 
-            background-color: rgba(15, 23, 42, 0.95); 
+            padding: 12px 12px 20px 12px; /* Margen inferior extra para que no pegue abajo */
+            background-color: #1e293b; 
             gap: 8px; 
-            backdrop-filter: blur(8px);
-            z-index: 10;
+            border-top: 1px solid #334155;
+            flex-shrink: 0;
         }
 
         input { 
@@ -126,13 +138,13 @@
             background-color: #0f172a; 
             color: white; 
             outline: none; 
-            font-size: 1rem; 
+            font-size: 0.95rem; 
         }
 
         input:focus { border-color: #38bdf8; }
 
         button.send-btn { 
-            padding: 12px 20px; 
+            padding: 12px 18px; 
             background-color: #2563eb; 
             color: white; 
             border: none; 
@@ -231,7 +243,7 @@
 
                     if (data.status === "completed") {
                         clearInterval(interval);
-                        statusMsg.innerHTML = `✅ ¡Archivo listo!<br><br><a href="${data.download_url}" target="_blank" style="color: #38bdf8; font-weight: bold; text-decoration: underline; font-size: 1.1rem;">👉 Toca aquí para descargar archivo (.mcworld / .mcaddon)</a>`;
+                        statusMsg.innerHTML = `✅ ¡Archivo listo!<br><br><a href="${data.download_url}" target="_blank" style="color: #38bdf8; font-weight: bold; text-decoration: underline; font-size: 1.05rem;">👉 Toca aquí para descargar archivo (.mcworld / .mcaddon)</a>`;
                     } else if (data.status === "error") {
                         clearInterval(interval);
                         statusMsg.innerHTML = "❌ No se pudo procesar este archivo.";
