@@ -96,6 +96,20 @@
             background-color: rgba(56, 189, 248, 0.15); 
         }
 
+        .nav-btn {
+            display: inline-block;
+            padding: 10px 16px;
+            margin: 10px 4px 0 0;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .nav-btn:hover { background-color: #1d4ed8; }
+
         .status-card { 
             margin-top: 8px; 
             padding: 12px; 
@@ -159,8 +173,8 @@
 
     <div id="input-wrapper">
         <div id="input-container">
-            <input type="text" id="query-input" placeholder="Buscar en RADDCRAFT..." onkeypress="if(event.key==='Enter') sendQuery()">
-            <button class="send-btn" onclick="sendQuery()">Buscar</button>
+            <input type="text" id="query-input" placeholder="Buscar en RADDCRAFT..." onkeypress="if(event.key==='Enter') sendQuery(1)">
+            <button class="send-btn" onclick="sendQuery(1)">Buscar</button>
         </div>
     </div>
 
@@ -177,33 +191,51 @@
             return msg;
         }
 
-        async function sendQuery() {
+        async function sendQuery(page = 1, lastQuery = null) {
             const input = document.getElementById('query-input');
-            const query = input.value.trim();
+            const query = lastQuery ? decodeURIComponent(lastQuery) : input.value.trim();
             if (!query) return;
 
-            appendMessage(query, 'user');
-            input.value = '';
-            const loadingMsg = appendMessage("Buscando en catálogo...", 'bot');
+            if (!lastQuery) {
+                appendMessage(query, 'user');
+                input.value = '';
+            }
+            
+            const loadingMsg = appendMessage(`Buscando página ${page}...`, 'bot');
 
             try {
                 const res = await fetch(`${BACKEND_URL}/api/search`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: query })
+                    body: JSON.stringify({ query: query, page: page })
                 });
                 const data = await res.json();
                 loadingMsg.remove();
 
                 if (!data.results || data.results.length === 0) {
-                    appendMessage("No se encontraron resultados.", 'bot');
+                    appendMessage(`No se encontraron resultados en la página ${page}.`, 'bot');
                     return;
                 }
 
-                let html = `Resultados para <b>${query}</b>:<br>`;
-                data.results.forEach((item, index) => {
-                    html += `<button class="option-btn" onclick="requestDownload('${encodeURIComponent(query)}', ${index + 1})">📥 ${item}</button>`;
+                let html = `Resultados para <b>${query}</b> (Página ${page}):<br>`;
+                data.results.forEach((item) => {
+                    // Extraer el índice del texto retornado por Rustcoin (ej. "11. The Incredibles")
+                    const match = item.match(/^(\d+)\./);
+                    const itemNumber = match ? match[1] : 1;
+                    
+                    html += `<button class="option-btn" onclick="requestDownload('${encodeURIComponent(query)}', ${itemNumber}, ${page})">📥 ${item}</button>`;
                 });
+
+                // Botones de navegación de página
+                html += `<div style="margin-top: 10px;">`;
+                if (page > 1) {
+                    html += `<button class="nav-btn" onclick="sendQuery(${page - 1}, '${encodeURIComponent(query)}')">⬅️ Pág. Anterior</button>`;
+                }
+                if (data.has_next) {
+                    html += `<button class="nav-btn" onclick="sendQuery(${page + 1}, '${encodeURIComponent(query)}')">➡️ Siguiente Pág.</button>`;
+                }
+                html += `</div>`;
+
                 appendMessage(html, 'bot');
             } catch (err) {
                 loadingMsg.remove();
@@ -211,17 +243,16 @@
             }
         }
 
-        async function requestDownload(query, option) {
+        async function requestDownload(query, option, page = 1) {
             const statusMsg = appendMessage(`<div class="status-card">⏳ Preparando el archivo en el servidor... Esto puede tomar un par de minutos si es muy pesado.</div>`, 'bot');
 
             try {
-                const res = await fetch(`${BACKEND_URL}/api/start_download?query=${query}&option=${option}`);
+                const res = await fetch(`${BACKEND_URL}/api/start_download?query=${query}&option=${option}&page=${page}`);
                 const data = await res.json();
 
                 if (data.success) {
                     checkStatus(data.task_id, statusMsg);
                 } else if (data.busy) {
-                    // Muestra la alerta de servidor ocupado por otra descarga
                     statusMsg.innerHTML = `<div class="status-card">${data.message}</div>`;
                 } else {
                     statusMsg.innerHTML = "❌ Error al iniciar el proceso de descarga.";
